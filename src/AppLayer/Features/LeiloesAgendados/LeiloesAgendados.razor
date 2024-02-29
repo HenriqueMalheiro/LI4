@@ -1,0 +1,223 @@
+@page "/leiloesAgendados"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager;
+@inject ILeilaoDAO leiloes
+@inject IPinturaDAO pinturas
+@inject ILicitacaoDAO licitacoes
+@inject IUtilizadorDAO utilizadores
+@inject AppState AppState
+@using DataLayer
+
+<PageTitle>BelasArtes</PageTitle>
+
+
+
+<!-- Fundo -->
+<div style="width: 100%; height: 90%; position: absolute; background: white"></div>
+<div style="width: 100%; height: 280%; left: 0%; top: 15%; position: absolute; background: rgba(64, 64, 64, 0.72)"></div>
+
+
+<!-- Cabecalho -->
+<img style="width: 5; height: 14%; left: 0%; top: 0.5%; position: absolute" src="logo.png" />
+<div style="width: 30%; height: 20%; left: 2%; top: 4%; position: absolute; text-align: center; color: black; font-size: 200%; font-family: Inter; font-weight: 500; word-wrap: break-word">Leilões Belas Artes</div>
+
+<button onclick="window.location.href='/'">
+<div style="width: 10%; height: 10%; left: 89.5%; top: 5%; position: absolute; text-align: center; color: black; font-size: 175%; font-family: Inter; font-weight: 100; word-wrap: break-word">LogOut</div>
+</button>
+<div style="width: 0%; height: 8%; left: 89.5%; top: 3.5%; position: absolute; border: 1px rgb(0, 0, 0) solid"></div>
+
+<button @onclick="RefreshPage">
+<div style="width: 20%; height: 10%; left: 71%; top: 5%; position: absolute; text-align: center; color: black; font-size: 175%; font-family: Inter; font-weight: 100; word-wrap: break-word">Leilões Agendados</div>
+</button>
+<div style="width: 0%; height: 8%; left: 72.5%; top: 3.5%; position: absolute; border: 1px rgb(0, 0, 0) solid"></div>
+
+<button onclick="window.location.href='/leiloesAtivos'">
+<div style="width: 20%; height: 10%; left: 55.5%; top: 5%; position: absolute; text-align: center; color: black; font-size: 175%; font-family: Inter; font-weight: 100; word-wrap: break-word">Leilões Ativos</div>
+</button>
+<div style="width: 0%; height: 8%; left: 58%; top: 3.5%; position: absolute; border: 1px rgb(0, 0, 0) solid"></div>
+
+<button onclick="window.location.href='/profile'">
+<div style="width: 10%; height: 10%; left: 49%; top: 5%; position: absolute; text-align: center; color: black; font-size: 175%; font-family: Inter; font-weight: 100; word-wrap: break-word">Perfil</div>
+</button>
+<div style="width: 0%; height: 8%; left: 89.5%; top: 3.5%; position: absolute; border: 1px rgb(0, 0, 0) solid"></div>
+
+
+<!--Barra pesquisa-->
+<div style="width: 100%; height: 25.5%; left: 0%; top: 14.5%; position: absolute; background: #404040;"></div>
+<div style="width: 60%; height: 10%; left: 20%; top: 22.5%; position: absolute; background: #f1f1f1; border-radius: 39px;"></div>
+
+<button  @onclick="SearchBar">
+<img style="width: 4%; height: 7.5%; left: 22%; top: 23.5%; position: absolute;" src="lupa.png" />
+</button>
+
+<input type="text" @bind="filtroPretendido" placeholder="Pesquisar autor/movimento artístico..." style="width: 50%; height: 7.5%; left: 27%; top: 24%; position: absolute; background: #f1f1f1; padding: 5px; border: none; font-size: 20px; font-family: Inter; font-weight: 167; box-sizing: border-box; outline: none;">
+
+
+@code{
+    private void GuardarDados(int leilao){
+        AppState.atual_leilao=leilao;
+        NavigationManager.NavigateTo("/auction", forceLoad: true);
+    }
+}
+
+
+<!--Caixas de Leilões-->
+@for (int i = AppState.leilaoAgendadoMostrar; i < Math.Min(8+AppState.leilaoAgendadoMostrar, ListLeiloesAgendadosMostrar.Count); i++){
+    var leilao = ListLeiloesAgendadosMostrar[i];
+
+    if (dictLeilaoFacade.ContainsKey(leilao.Id)){
+        if (dictLeilaoFacade[leilao.Id].Leilao.Id.Equals(leilao.Id)){  
+            if(@i%2==0){
+                <!--Leiloes esquerda--> 
+                <div style="width: 42.5%; height: 40%; left: 5%; top: @(55+(25*(i%8)))%; position: absolute; background: white; border-radius: 59px; border: 5px black solid"></div>
+                <div style="width: 20%; height: 40%; left: 5%; top: @(55+(25*(i%8)))%; position: absolute; background: #D9D9D9; border-radius: 59px; border: 1px black solid"></div>
+                <img style="width: 20%; height: 40%; left: 5%; top: @(55+(25*(i%8)))%; position: absolute; background: #D9D9D9; border-radius: 59px; border: 1px black solid" src = "@dictLeilaoFacade[leilao.Id].Pintura.Foto"/>
+                <div style="width: 20%; height: 10%; left: 26%; top: @(57+(25*(i%8)))%; position: absolute; color: black; font-size: 150%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: center; display: flex; align-items: center; justify-content: center;">Obra: @dictLeilaoFacade[leilao.Id].Pintura.Nome</div>
+                <div style="width: 20%; height: 10%; left: 26.5%; top: @(69+(25*(i%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Movimento:
+                @{
+                    string final = "";
+                    foreach(String movimentoArtistico in dictMovimentosArtisticos.Keys){
+                        if (dictLeilaoFacade[leilao.Id].Pintura.CodMovimentoArtistico.Equals(dictMovimentosArtisticos[movimentoArtistico])){
+                            final=movimentoArtistico; 
+                        }
+                    }
+                }@final
+                </div>
+                <div style="width: 12.5%; height: 10%; left: 26.5% ; top: @(75+(25*(i%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Artista: @dictLeilaoFacade[leilao.Id].Pintura.Artista</div>
+                <div style="width: 12.5%; height: 10%; left: 26.5% ; top: @(81+(25*(i%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Preço Inicial: @dictLeilaoFacade[leilao.Id].PrecoInicial€</div>
+                <div style="width: 15%; height: 10%; left: 26.4%; top: @(87+(25*(i%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Começa em: 
+                @{
+                    string tempoRestanteFormatado = "";
+
+                    TimeSpan tempoRestante = leilao.DataInicio - DateTime.Now;
+                    tempoRestanteFormatado = $"{tempoRestante.Days}D {tempoRestante.Hours}H {tempoRestante.Minutes}M {tempoRestante.Seconds}S";
+                }
+                @tempoRestanteFormatado
+                </div>
+            }else{
+                <!--Leiloes direita-->
+                <div style="width: 42.5%; height: 40%; left: 52.5%; top: @(55+(25*((i-1)%8)))%; position: absolute; background: white; border-radius: 59px; border: 5px black solid"></div>
+                <div style="width: 20%; height: 40%; left: 52.5%; top: @(55+(25*((i-1)%8)))%; position: absolute; background: #D9D9D9; border-radius: 59px; border: 1px black solid"></div>
+                <img style="width: 20%; height: 40%; left: 52.5%; top: @(55+(25*((i-1)%8)))%; position: absolute; background: #D9D9D9; border-radius: 59px; border: 1px black solid" src = "@dictLeilaoFacade[leilao.Id].Pintura.Foto"/>
+                <div style="width: 20%; height: 10%; left: 73.5%; top: @(57+(25*((i-1)%8)))%; position: absolute; color: black; font-size: 150%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: center; display: flex; align-items: center; justify-content: center;">Obra: @dictLeilaoFacade[leilao.Id].Pintura.Nome</div>
+                <div style="width: 20%; height: 10%; left: 74%; top: @(69+(25*((i-1)%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Movimento:
+                @{
+                    string final = "";
+                    foreach(String movimentoArtistico in dictMovimentosArtisticos.Keys){
+                        if (dictLeilaoFacade[leilao.Id].Pintura.CodMovimentoArtistico.Equals(dictMovimentosArtisticos[movimentoArtistico])){
+                            final=movimentoArtistico; 
+                        }
+                    }
+                }@final
+                </div>
+                <div style="width: 12.5%; height: 10%; left: 74% ; top: @(75+(25*((i-1)%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Artista: @dictLeilaoFacade[leilao.Id].Pintura.Artista</div>
+                <div style="width: 12.5%; height: 10%; left: 74% ; top: @(81+(25*((i-1)%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Preço Inicial: @dictLeilaoFacade[leilao.Id].PrecoInicial€</div>
+                <div style="width: 15%; height: 10%; left: 73.9%; top: @(87+(25*((i-1)%8)))%; position: absolute; color: black; font-size: 100%; font-family: Inter; font-weight: 167; word-wrap: break-word; text-align: left;">Começa em: 
+                @{
+                    string tempoRestanteFormatado = "";
+
+                    TimeSpan tempoRestante = leilao.DataInicio - DateTime.Now;
+                    tempoRestanteFormatado = $"{tempoRestante.Days}D {tempoRestante.Hours}H {tempoRestante.Minutes}M {tempoRestante.Seconds}S";
+                }
+                @tempoRestanteFormatado
+                </div>
+            }
+        }
+    }
+}
+
+
+@code{
+    private void nextPage(){
+        if (AppState.leilaoAgendadoMostrar+8>=ListLeiloesAgendadosMostrar.Count) return;
+        AppState.leilaoAgendadoMostrar+=8;
+        NavigationManager.NavigateTo("/leiloesAtivos", forceLoad: true);
+    }
+
+    private void previousPage(){
+        if (AppState.leilaoAgendadoMostrar<8) return;
+        AppState.leilaoAgendadoMostrar-=8;
+        NavigationManager.NavigateTo("/leiloesAtivos", forceLoad: true);
+    }
+}
+
+
+<!--Botoes de baixo-->
+<div style="width: 10%; height: 5%; left: 45%; top: 258%; position: absolute; background: white; border-radius: 10px"></div>
+<div style="width: 10%; height: 5%; left: 45%; top: 257.4%; position: absolute; color: black; font-size: 2vw; font-family: Inter; font-weight: 500; text-align: center; word-wrap: break-word">@((AppState.leilaoAgendadoMostrar/8)+1)/@((ListLeiloesAgendadosMostrar.Count/8)+1)</div>
+<button @onclick="previousPage">
+<img style="width: auto; height: 3.5%; left: 45.8%; top: 258.8%; position: absolute; mix-blend-mode: hard-light; background: linear-gradient(0deg, white 0%, white 100%)" src="arrow.png" />
+</button>
+<button @onclick="nextPage">
+<img style="width: auto; height: 3.5%; left: 52.5%; top: 258.9%; position: absolute; mix-blend-mode: hard-light; transform: rotate(180deg); background: linear-gradient(0deg, white 0%, white 100%)" src="arrow.png" />
+</button>
+
+
+
+@code{
+    private List<Leilao> ListLeiloesAgendados = new List<Leilao>(); //tem os leiloes agendados
+    private List<Leilao> ListLeiloesAgendadosMostrar = new List<Leilao>(); //tem os leiloes para mostrar na pagina
+
+    private Dictionary<string,int> dictMovimentosArtisticos = new Dictionary<string,int>(); //associa cada movimentoArtistico ao seu codigo
+    private Dictionary<int,LeilaoFacade> dictLeilaoFacade = new Dictionary<int, LeilaoFacade>(); //tem todos os leiloes
+
+    private string filtroPretendido {get;set;} = "";
+
+    class LeilaoFacade{
+        public Leilao Leilao;
+        public double PrecoInicial {get;set;}
+        public Pintura Pintura {get;set;}
+        public Datalayer.Utilizador Vendedor {get;set;}
+
+        public LeilaoFacade (Leilao Leilao, double PrecoInicial,Pintura Pintura, Datalayer.Utilizador Vendedor){
+            this.Leilao=Leilao;
+            this.PrecoInicial=PrecoInicial;
+            this.Pintura=Pintura;
+            this.Vendedor=Vendedor;
+        }
+    }
+
+    private void RefreshPage(){
+        AppState.ListLeiloesAgendadosMostrar=ListLeiloesAgendados;
+        AppState.leilaoAgendadoMostrar=0;
+        NavigationManager.NavigateTo("/leiloesAgendados",forceLoad:true);
+    }
+
+    private void SearchBar(){
+        List<Leilao> aux = new List<Leilao>();
+        foreach (Leilao leilao in this.ListLeiloesAgendados) {
+            if (dictMovimentosArtisticos.ContainsKey(filtroPretendido)){
+                if (dictLeilaoFacade[leilao.Id].Pintura.CodMovimentoArtistico.Equals(dictMovimentosArtisticos[filtroPretendido])){
+                    aux.Add(leilao);
+                }
+            }else if(dictLeilaoFacade[leilao.Id].Pintura.Artista.Equals(filtroPretendido)){
+                aux.Add(leilao);
+            }
+        }
+        AppState.ListLeiloesAgendadosMostrar=aux;
+        NavigationManager.NavigateTo("/leiloesAgendados",forceLoad:true);
+    }
+
+    protected override async Task OnInitializedAsync(){
+        List<MovimentoArtistico> listMovimentosArtisiticos = await pinturas.FindAllMovimentosArtisticos();
+        foreach(MovimentoArtistico movimentoArtistico in listMovimentosArtisiticos){
+            dictMovimentosArtisticos.Add(movimentoArtistico.Nome,movimentoArtistico.Id);
+        }
+
+        ListLeiloesAgendados = await leiloes.LeiloesByEstado(1);
+        ListLeiloesAgendadosMostrar = AppState.ListLeiloesAgendadosMostrar; 
+        if(!ListLeiloesAgendadosMostrar.Any()){
+            ListLeiloesAgendadosMostrar=ListLeiloesAgendados;
+        }
+
+        List<Leilao> auxLicitados = new List<Leilao>();
+        List<Leilao> auxNaoLicitados = new List<Leilao>();
+        foreach(Leilao leilao in ListLeiloesAgendados){
+            Pintura pintura = (await pinturas.GetPinturaById(leilao.CodPintura)).First();
+            if (pintura.EmailVendedor!= null){
+                dictLeilaoFacade.Add(leilao.Id,new LeilaoFacade(leilao,leilao.PrecoInicial,pintura,
+                (await utilizadores.GetUtilizadorByEmail(pintura.EmailVendedor)).First()));    
+            }
+        }
+    }
+}
